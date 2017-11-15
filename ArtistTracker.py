@@ -144,7 +144,7 @@ class Ui_Dialog(object):
         self.SPOTIPY_REDIRECT_URI = 'http://ericreyes.github.io/'
         self.username = 'erickilator1@gmail.com'
         self.scope = 'user-library-read'
-        token = util.prompt_for_user_token(username=self.username, client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET, redirect_uri=self.SPOTIPY_REDIRECT_URI)
+        token = 'BQBJmn2u2kFuEaZ1IA4hAGD7qOthredcFkVYnJsV5dgLKC-v50bCiloZiw5U5lnmGICUnP0r835HU29qZI8E2jGXQbvPNLObD5ooD8XTr7uIoZzmr1U_LezElzFuNgV4BkgxzCfi6AE5-fU'
         self.spotify = spotipy.Spotify(auth=token)
 
 
