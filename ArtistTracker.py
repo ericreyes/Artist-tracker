@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import random
+import pprint
+from bson.objectid import ObjectId
 
 from pymongo import MongoClient
 
@@ -27,6 +29,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(1023, 750)
+        self.artists_ids = []
         self.query_input = QtGui.QLineEdit(Dialog)
         self.query_input.setGeometry(QtCore.QRect(30, 70, 601, 41))
         self.query_input.setText(_fromUtf8(""))
@@ -49,9 +52,9 @@ class Ui_Dialog(object):
         font.setPointSize(20)
         self.plot_label.setFont(font)
         self.plot_label.setObjectName(_fromUtf8("plot_label"))
-        self.reload_button_2 = QtGui.QPushButton(Dialog)
-        self.reload_button_2.setGeometry(QtCore.QRect(240, 120, 151, 31))
-        self.reload_button_2.setObjectName(_fromUtf8("reload_button_2"))
+        self.reload_button = QtGui.QPushButton(Dialog)
+        self.reload_button.setGeometry(QtCore.QRect(240, 120, 151, 31))
+        self.reload_button.setObjectName(_fromUtf8("reload_button"))
         self.verticalLayoutWidget = QtGui.QWidget(Dialog)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 220, 1001, 501))
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
@@ -75,11 +78,24 @@ class Ui_Dialog(object):
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
         self.start_button.clicked.connect(self.plot)
+        self.save_button.clicked.connect(self.save_project)
+        self.reload_button.clicked.connect(self.reload_document)
 
         self.graph_canvas.addWidget(self.canvas)
 
+    def retranslateUi(self, Dialog):
+        Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
+        self.query_input.setPlaceholderText(_translate("Dialog", "ArtistName/Album/Song", None))
+        self.start_button.setText(_translate("Dialog", "Track \'em !", None))
+        self.save_button.setText(_translate("Dialog", "Save project", None))
+        self.label.setText(_translate("Dialog", "Artist name", None))
+        self.plot_label.setText(_translate("Dialog", "Song popularity", None))
+        self.reload_button.setText(_translate("Dialog", "Reload project", None))
+        self.reload_input.setPlaceholderText(_translate("Dialog", "Project name", None))
+        self.label_3.setText(_translate("Dialog", "Artist Tracker", None))
+
+
     def plot(self):
-        # random data
         data = [random.random() for i in range(10)]
         # create an axis
         ax = self.figure.add_subplot(111)
@@ -90,30 +106,31 @@ class Ui_Dialog(object):
         # refresh canvas
         self.canvas.draw()
 
-    def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
-        self.query_input.setPlaceholderText(_translate("Dialog", "ArtistName/Album/Song", None))
-        self.start_button.setText(_translate("Dialog", "Track \'em !", None))
-        self.save_button.setText(_translate("Dialog", "Save project", None))
-        self.label.setText(_translate("Dialog", "Artist name", None))
-        self.plot_label.setText(_translate("Dialog", "Song popularity", None))
-        self.reload_button_2.setText(_translate("Dialog", "Reload project", None))
-        self.reload_input.setPlaceholderText(_translate("Dialog", "Project name", None))
-        self.label_3.setText(_translate("Dialog", "Artist Tracker", None))
+    def save_project(self):
+        document_name = self.query_input.text()
+        artist_document = {'author': 'coldplay'}
+        inserted_id = self.collection.insert_one(artist_document).inserted_id
+        self.artists_ids.append(str(inserted_id))
 
+    def reload_document(self):
+        document_name = self.reload_input.getText()
+        whole_document = self.collection.find_one(document_name)
+        pprint.pprint(whole_document)
+
+
+    def setupDB(self):
+        self.client = MongoClient()
+        self.db = self.client['ArtistTracker']
+        self.collection = self.db['tracker']
 
 if __name__ == "__main__":
 
     app = QtGui.QApplication(sys.argv)
     Dialog = QtGui.QDialog()
     ui = Ui_Dialog()
+
     ui.setupUi(Dialog)
-
-    client = MongoClient()
-    db = client['test-database']
-    print(db)
-
-
+    ui.setupDB()
 
 
     Dialog.show()
