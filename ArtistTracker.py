@@ -8,6 +8,8 @@ import pprint
 from bson.objectid import ObjectId
 
 from pymongo import MongoClient
+import spotipy
+import spotipy.util as util
 
 
 
@@ -77,7 +79,7 @@ class Ui_Dialog(object):
 
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
-        self.start_button.clicked.connect(self.plot)
+        self.start_button.clicked.connect(self.track_artist)
         self.save_button.clicked.connect(self.save_project)
         self.reload_button.clicked.connect(self.reload_document)
 
@@ -95,16 +97,22 @@ class Ui_Dialog(object):
         self.label_3.setText(_translate("Dialog", "Artist Tracker", None))
 
 
-    def plot(self):
-        data = [random.random() for i in range(10)]
-        # create an axis
-        ax = self.figure.add_subplot(111)
-        # discards the old graph
-        ax.clear()
-        # plot data
-        ax.plot(data, '*-')
-        # refresh canvas
-        self.canvas.draw()
+    def track_artist(self):
+        artist_name = self.query_input.text()
+        results = self.spotify.search(q='artist:'+ artist_name, type='artist')
+        items = results['artists']['items']
+        if len(items) > 0:
+            artist = items[0]
+        print (artist['name'])
+        # data = [random.random() for i in range(10)]
+        # # create an axis
+        # ax = self.figure.add_subplot(111)
+        # # discards the old graph
+        # ax.clear()
+        # # plot data
+        # ax.plot(data, '*-')
+        # # refresh canvas
+        # self.canvas.draw()
 
     def save_project(self):
         artist_name = self.query_input.text()
@@ -128,6 +136,22 @@ class Ui_Dialog(object):
         self.client = MongoClient()
         self.db = self.client['ArtistTracker']
         self.collection = self.db['tracker']
+
+        token = 'd2e67871f01d430c8bc7408c4908579f'
+
+        self.SPOTIPY_CLIENT_ID = '0598cd692ec64914859bd9160897908d'
+        self.SPOTIPY_CLIENT_SECRET = 'd2e67871f01d430c8bc7408c4908579f'
+        self.SPOTIPY_REDIRECT_URI = 'http://ericreyes.github.io/'
+        self.username = 'erickilator1@gmail.com'
+        self.scope = 'user-library-read'
+        token = util.prompt_for_user_token(username=self.username, client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET, redirect_uri=self.SPOTIPY_REDIRECT_URI)
+        self.spotify = spotipy.Spotify(auth=token)
+
+
+# Client ID
+# 0598cd692ec64914859bd9160897908d
+# Client Secret
+# d2e67871f01d430c8bc7408c4908579f
 
 if __name__ == "__main__":
 
