@@ -107,14 +107,20 @@ class Ui_Dialog(object):
         self.canvas.draw()
 
     def save_project(self):
-        document_name = self.query_input.text()
-        artist_document = {'author': 'coldplay'}
+        artist_name = self.query_input.text()
+        self.query_input.setText('')
+        print('saving project with name {}'.format(artist_name))
+        artist_document = {'name': 'coldplay'}
         inserted_id = self.collection.insert_one(artist_document).inserted_id
         self.artists_ids.append(str(inserted_id))
+        print (str(inserted_id))
 
     def reload_document(self):
-        document_name = self.reload_input.getText()
-        whole_document = self.collection.find_one(document_name)
+        artist_name = self.reload_input.text()
+        self.reload_input.setText('')
+        print('reloading name {}'.format(artist_name))
+        #Find by name
+        whole_document = self.collection.find_one({'name': artist_name})
         pprint.pprint(whole_document)
 
 
