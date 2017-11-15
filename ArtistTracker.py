@@ -10,7 +10,7 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient
 import spotipy
 import spotipy.util as util
-
+from spotipy.oauth2 import SpotifyClientCredentials
 
 
 try:
@@ -90,6 +90,7 @@ class Ui_Dialog(object):
         self.query_input.setPlaceholderText(_translate("Dialog", "ArtistName/Album/Song", None))
         self.start_button.setText(_translate("Dialog", "Track \'em !", None))
         self.save_button.setText(_translate("Dialog", "Save project", None))
+        self.query_input.setText(_translate("Dialog", "coldplay", None))
         self.label.setText(_translate("Dialog", "Artist name", None))
         self.plot_label.setText(_translate("Dialog", "Song popularity", None))
         self.reload_button.setText(_translate("Dialog", "Reload project", None))
@@ -100,10 +101,19 @@ class Ui_Dialog(object):
     def track_artist(self):
         artist_name = self.query_input.text()
         results = self.spotify.search(q='artist:'+ artist_name, type='artist')
-        items = results['artists']['items']
-        if len(items) > 0:
-            artist = items[0]
-        print (artist['name'])
+
+        main_artist = results['artists']['items'][0]
+        if main_artist:
+            print ('Main artist found: {}'.format(main_artist['name']))
+        else:
+            print('NO ARTIST FOUND')
+
+
+        related_artists = self.spotify.artist_related_artists(main_artist['id'])
+        print('related artists:', '\n')
+        for artist in related_artists['artists']:
+            print (artist['name'], artist['popularity'], artist['followers']['total'] )
+
         # data = [random.random() for i in range(10)]
         # # create an axis
         # ax = self.figure.add_subplot(111)
@@ -143,15 +153,15 @@ class Ui_Dialog(object):
         self.SPOTIPY_CLIENT_SECRET = 'd2e67871f01d430c8bc7408c4908579f'
         self.SPOTIPY_REDIRECT_URI = 'http://ericreyes.github.io/'
         self.username = 'erickilator1@gmail.com'
-        self.scope = 'user-library-read'
-        token = 'BQBJmn2u2kFuEaZ1IA4hAGD7qOthredcFkVYnJsV5dgLKC-v50bCiloZiw5U5lnmGICUnP0r835HU29qZI8E2jGXQbvPNLObD5ooD8XTr7uIoZzmr1U_LezElzFuNgV4BkgxzCfi6AE5-fU'
-        self.spotify = spotipy.Spotify(auth=token)
 
+        self.scope = 'playlist-modify-public'
+        #self.token = util.prompt_for_user_token(self.username, client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET, redirect_uri=self.SPOTIPY_REDIRECT_URI)
 
-# Client ID
-# 0598cd692ec64914859bd9160897908d
-# Client Secret
-# d2e67871f01d430c8bc7408c4908579f
+        try:
+            self.client_credentials_manager = SpotifyClientCredentials(client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET)
+            self.spotify = spotipy.Spotify(client_credentials_manager=self.client_credentials_manager)
+        except Exception as e:
+            print ('Credentials error', e)
 
 if __name__ == "__main__":
 
