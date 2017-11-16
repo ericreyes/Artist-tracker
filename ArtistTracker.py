@@ -72,7 +72,7 @@ class Ui_Dialog(object):
         self.plot_label = QtGui.QLabel(Dialog)
         self.plot_label.setGeometry(QtCore.QRect(440, 150, 161, 61))
         font = QtGui.QFont()
-        font.setPointSize(20)
+        font.setPointSize(23)
         self.plot_label.setFont(font)
         self.plot_label.setObjectName(_fromUtf8("plot_label"))
         self.reload_button = QtGui.QPushButton(Dialog)
@@ -93,7 +93,9 @@ class Ui_Dialog(object):
         font.setPointSize(24)
         self.label_3.setFont(font)
         self.label_3.setObjectName(_fromUtf8("label_3"))
-
+        self.compare_button = QtGui.QPushButton(Dialog)
+        self.compare_button.setGeometry(QtCore.QRect(810, 150, 171, 41))
+        self.compare_button.setObjectName(_fromUtf8("compare_button"))
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -103,6 +105,7 @@ class Ui_Dialog(object):
         self.start_button.clicked.connect(self.track_artist)
         self.save_button.clicked.connect(self.save_project)
         self.reload_button.clicked.connect(self.reload_document)
+        self.compare_button.clicked.connect(self.compare_all_artists)
 
         self.graph_canvas.addWidget(self.canvas)
 
@@ -111,6 +114,7 @@ class Ui_Dialog(object):
         self.query_input.setPlaceholderText(_translate("Dialog", "ArtistName/Album/Song", None))
         self.start_button.setText(_translate("Dialog", "Track \'em !", None))
         self.save_button.setText(_translate("Dialog", "Save project", None))
+        self.compare_button.setText(_translate("Dialog", "Compare all artists!", None))
         self.query_input.setText(_translate("Dialog", "coldplay", None))
         self.label.setText(_translate("Dialog", "Artist name", None))
         self.plot_label.setText(_translate("Dialog", "Song popularity", None))
@@ -136,8 +140,8 @@ class Ui_Dialog(object):
 
         reponse = self.spotify.artist_top_tracks(main_artist['id'])
         for i, track in enumerate(reponse['tracks']):
-            artist1_dict[track['name']] = track['popularity']
-        pprint.pprint(artist1_dict)
+            self.artist1_dict[track['name']] = track['popularity']
+        pprint.pprint(self.artist1_dict)
 
 
         related_artists = self.spotify.artist_related_artists(main_artist['id'])
@@ -157,17 +161,23 @@ class Ui_Dialog(object):
         # Gives back the top 10 songs
         reponse = self.spotify.artist_top_tracks(enemy['id'])
         for i, track in enumerate(reponse['tracks']):
-            artist2_dict[track['name']] = track['popularity']
-        pprint.pprint(artist2_dict)
+            self.artist2_dict[track['name']] = track['popularity']
+        #pprint.pprint(self.artist2_dict)
 
 
         self.main_name = main_artist['name']
         self.enemy_name = enemy['name']
 
-        self.plot(artist1_dict, artist2_dict)
+        self.plot(self.artist1_dict, self.artist2_dict)
 
-    def plot(self, artist1_dict, artist2_dict):
+    def plot(self, artist1_dict, artist2_dict, count=None, popular_dict=None):
+        if (artist2_dict == None):
+            print('plotting the comparison')
+            self.plot_comparison(popular_dict, count)
+            return
+
         bar_number = 10
+
         ind = np.arange(bar_number)  # the x locations for the groups
         width = 0.30       # the width of the bars
         self.ax = self.figure.add_subplot(111)
@@ -203,6 +213,38 @@ class Ui_Dialog(object):
         autolabel(self.ax, rects2, names2)
         self.canvas.draw()
 
+    def plot_comparison(self, popular_dict, count):
+        ind = np.arange(count)  # the x locations for the groups
+        width = 0.30       # the width of the bars
+        self.ax = self.figure.add_subplot(111)
+        self.ax.clear()
+        diff = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+        diff = diff[:count]
+
+
+        popular_dict = sorted(popular_dict.items(), key=operator.itemgetter(1), reverse=True)
+        values1 = [pair[1] for pair in popular_dict]
+        names1 = [pair[0] for pair in popular_dict]
+
+        values1.pop()
+        names1.pop()
+        rects1 = self.ax.bar(ind, values1, width, color='g', yerr=diff)
+
+        self.ax.set_ylabel('Popularity %')
+        self.ax.set_title('Artist vs Artist comparison')
+        #Todo
+        self.ax.set_xticks(ind + width / 2)
+        array = ['art1', 'art2', 'art3', 'art4', 'art5','art6', 'art7', 'art8', 'art9', 'art10']
+
+        self.ax.set_xticklabels(array)
+        self.ax.set_xlabel('All related artists')
+
+        #Legend with both artist names
+
+        autolabel(self.ax, rects1, names1)
+        self.canvas.draw()
+
+
     def save_project(self):
         artist_name = self.query_input.text()
         self.query_input.setText('')
@@ -228,13 +270,38 @@ class Ui_Dialog(object):
 
         self.main_name = main_name
         self.enemy_name = enemy_name
-        print (record)
+        #print (record)
 
         self.plot(record['dict1'], record['dict2'])
         print ('sucessfully reloaded!')
 
     def compare_all_artists(self):
-        pass
+        artist_name = self.query_input.text()
+        results = self.spotify.search(q='artist:'+ artist_name, type='artist')
+
+
+        main_artist = results['artists']['items'][0]
+        if main_artist:
+            print ('Main artist found: {}'.format(main_artist['name']))
+        else:
+            print('NO ARTIST FOUND')
+
+        related_artists = self.spotify.artist_related_artists(main_artist['id'])
+
+        count = len(related_artists['artists'])
+        if count < 10:
+            related_list = related_artists['artists'][:count]
+        else:
+            related_list = related_artists['artists'][:10]
+            count = 10
+
+        popular_dict = {}
+        for artist in related_list:
+            popular_dict[artist['name']] = artist['popularity']
+        popular_dict[main_artist['name']] = main_artist['popularity']
+
+        self.plot(None, None, popular_dict=popular_dict, count=count)
+
 
     def setupDB(self):
         self.client = MongoClient()
