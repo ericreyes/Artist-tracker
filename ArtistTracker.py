@@ -120,8 +120,8 @@ class Ui_Dialog(object):
 
 
     def track_artist(self):
-        artist1_dict = {}
-        artist2_dict = {}
+        self.artist1_dict = {}
+        self.artist2_dict = {}
         artist_name = self.query_input.text()
         results = self.spotify.search(q='artist:'+ artist_name, type='artist')
 
@@ -165,13 +165,6 @@ class Ui_Dialog(object):
         self.enemy_name = enemy['name']
 
         self.plot(artist1_dict, artist2_dict)
-
-        self.artist1_dict = artist1_dict
-        self.artist2_dict = artist2_dict
-
-
-
-
 
     def plot(self, artist1_dict, artist2_dict):
         bar_number = 10
@@ -230,19 +223,18 @@ class Ui_Dialog(object):
         print('reloading name {}'.format(artist_name))
 
         record = self.collection.find_one({'name':artist_name})
-        self.main_name = record['main']
-        self.enemy_name = record['enemy']
+        main_name = record['main']
+        enemy_name = record['enemy']
+
+        self.main_name = main_name
+        self.enemy_name = enemy_name
         print (record)
 
         self.plot(record['dict1'], record['dict2'])
         print ('sucessfully reloaded!')
-        #Find by name
 
-
-
-        #whole_document = self.collection.find_one({'name': artist_name})
-        #pprint.pprint(whole_document)
-
+    def compare_all_artists(self):
+        pass
 
     def setupDB(self):
         self.client = MongoClient()
