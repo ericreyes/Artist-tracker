@@ -2,18 +2,18 @@ import sys
 from PyQt4 import QtCore, QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import random
 import pprint
 from bson.objectid import ObjectId
 
 from pymongo import MongoClient
 import spotipy
-import spotipy.util as util
 from spotipy.oauth2 import SpotifyClientCredentials
 
 import numpy as np
 import matplotlib.pyplot as plt
 import operator
+
+from bson.json_util import dumps
 
 
 try:
@@ -159,11 +159,10 @@ class Ui_Dialog(object):
         main_name = main_artist['name']
         enemy_name = enemy['name']
 
+        self.plot(artist1_dict, artist2_dict)
 
-        rects1, rects2, ax, names1, names2= self.plot(artist1_dict ,artist2_dict)
-        autolabel(ax, rects1, names1)
-        autolabel(ax, rects2, names2)
-        self.canvas.draw()
+
+
 
 
 
@@ -174,8 +173,9 @@ class Ui_Dialog(object):
         bar_number = 10
         ind = np.arange(bar_number)  # the x locations for the groups
         width = 0.30       # the width of the bars
-        ax = self.figure.add_subplot(111)
-        diff = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+        self.ax = self.figure.add_subplot(111)
+        self.ax.clear()
+        diff = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
 
         sorted_dict1 = sorted(artist1_dict.items(), key=operator.itemgetter(1), reverse=True)
         sorted_dict2 = sorted(artist2_dict.items(), key=operator.itemgetter(1), reverse=True)
@@ -186,43 +186,52 @@ class Ui_Dialog(object):
         names1 = [pair[0] for pair in sorted_dict1]
         names2 = [pair[0] for pair in sorted_dict2]
 
-        rects1 = ax.bar(ind, values1, width, color='g', yerr=diff)
-        rects2 = ax.bar(ind + width, values2, width, color='c', yerr=diff)
-        ax.set_ylabel('Popularity')
-        ax.set_title('Artist vs Artist comparison')
-        ax.set_xticks(ind + width / 2)
+        rects1 = self.ax.bar(ind, values1, width, color='g', yerr=diff)
+        rects2 = self.ax.bar(ind + width, values2, width, color='c', yerr=diff)
+        self.ax.set_ylabel('Popularity %')
+        self.ax.set_title('Artist vs Artist comparison')
+        self.ax.set_xticks(ind + width / 2)
         array = ['Top1', 'Top2', 'Top3', 'Top4', 'Top5','Top6', 'Top7', 'Top8', 'Top9', 'Top10']
-        ax.set_xticklabels(array)
-        ax.set_xlabel('Top songs from artists')
+
+        self.ax.set_xticklabels(array)
+        self.ax.set_xlabel('Top songs from artists')
 
         #Legend with both artist names
-        ax.legend((rects1[0], rects2[0]), (main_name, enemy_name))
+        self.ax.legend((rects1[0], rects2[0]), (main_name, enemy_name))
 
-        return rects1, rects2, ax, names1, names2
+
+        autolabel(self.ax, rects1, names1)
+        autolabel(self.ax, rects2, names2)
+        self.canvas.draw()
 
     def save_project(self):
         artist_name = self.query_input.text()
         self.query_input.setText('')
         print('saving project with name {}'.format(artist_name))
-        artist_document = {'name': 'coldplay'}
-        inserted_id = self.collection.insert_one(artist_document).inserted_id
-        self.artists_ids.append(str(inserted_id))
-        print (str(inserted_id))
+
+
+
+        #artist_document = {'name': 'coldplay'}
+        #inserted_id = self.collection.insert_one(artist_document).inserted_id
+        #self.artists_ids.append(str(inserted_id))
+        #print (str(inserted_id))
 
     def reload_document(self):
         artist_name = self.reload_input.text()
         self.reload_input.setText('')
         print('reloading name {}'.format(artist_name))
         #Find by name
-        whole_document = self.collection.find_one({'name': artist_name})
-        pprint.pprint(whole_document)
+
+
+
+        #whole_document = self.collection.find_one({'name': artist_name})
+        #pprint.pprint(whole_document)
 
 
     def setupDB(self):
         self.client = MongoClient()
         self.db = self.client['ArtistTracker']
         self.collection = self.db['tracker']
-
         token = 'd2e67871f01d430c8bc7408c4908579f'
 
         self.SPOTIPY_CLIENT_ID = '0598cd692ec64914859bd9160897908d'
@@ -231,7 +240,7 @@ class Ui_Dialog(object):
         self.username = 'erickilator1@gmail.com'
 
         self.scope = 'playlist-modify-public'
-        #self.token = util.prompt_for_user_token(self.username, client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET, redirect_uri=self.SPOTIPY_REDIRECT_URI)
+
 
         try:
             self.client_credentials_manager = SpotifyClientCredentials(client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET)
