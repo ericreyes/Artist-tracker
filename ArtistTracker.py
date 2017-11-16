@@ -1,6 +1,5 @@
 import sys
 from PyQt4 import QtCore, QtGui
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import random
@@ -12,6 +11,8 @@ import spotipy
 import spotipy.util as util
 from spotipy.oauth2 import SpotifyClientCredentials
 
+import numpy as np
+import matplotlib.pyplot as plt
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -26,6 +27,17 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+
+def autolabel(ax, rects):
+    """
+    Attach a text label above each bar displaying its height
+    """
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
+                '%d' % int(height),
+                ha='center', va='bottom')
+        ax.text(rect.get_x() + rect.get_width()/2., .2*height, 'textooo', rotation='vertical',ha='center', va='bottom')
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -108,11 +120,46 @@ class Ui_Dialog(object):
         else:
             print('NO ARTIST FOUND')
 
+        reponse = self.spotify.artist_top_tracks(main_artist['id'])
+
+        for i, track in enumerate(reponse['tracks']):
+            print(i, 'name: {}'.format(track['name']), 'popularity: {}'.format(track['popularity']))
+
+        print('\n''\n''\n')
 
         related_artists = self.spotify.artist_related_artists(main_artist['id'])
         print('related artists:', '\n')
         for artist in related_artists['artists']:
             print (artist['name'], artist['popularity'], artist['followers']['total'] )
+
+        rects1, rects2, ax= self.plot([25, 32, 34, 20, 25], [20, 35, 30, 35, 27])
+        autolabel(ax, rects1)
+        autolabel(ax, rects2)
+        self.canvas.draw()
+
+
+
+    def plot(self, artist1_popularity, artist2_popularity):
+        bar_number = 5
+        ind = np.arange(bar_number)  # the x locations for the groups
+        width = 0.30       # the width of the bars
+        ax = self.figure.add_subplot(111)
+
+        men_std = [2, 2, 2, 2, 2]
+        rects1 = ax.bar(ind, artist1_popularity, width, color='b', yerr=men_std)
+
+        women_std = [2, 2, 2, 2, 2]
+        rects2 = ax.bar(ind + width, artist2_popularity, width, color='r', yerr=women_std)
+        ax.set_ylabel('Popularity')
+        ax.set_title('Artist vs Artist comparison')
+        ax.set_xticks(ind + width / 2)
+        array = ['C1', 'C2', 'C3', 'C4', 'C5']
+        ax.set_xticklabels(array)
+
+        #Legend with both artist names
+        ax.legend((rects1[0], rects2[0]), ('Men', 'Women'))
+
+        return rects1, rects2, ax
 
         # data = [random.random() for i in range(10)]
         # # create an axis
