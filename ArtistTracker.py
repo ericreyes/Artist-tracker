@@ -94,8 +94,12 @@ class Ui_Dialog(object):
         self.label_3.setFont(font)
         self.label_3.setObjectName(_fromUtf8("label_3"))
         self.compare_button = QtGui.QPushButton(Dialog)
-        self.compare_button.setGeometry(QtCore.QRect(810, 150, 171, 41))
+        self.compare_button.setGeometry(QtCore.QRect(640, 120, 171, 41))
         self.compare_button.setObjectName(_fromUtf8("compare_button"))
+
+        self.outliers_button = QtGui.QPushButton(Dialog)
+        self.outliers_button.setGeometry(QtCore.QRect(810, 120, 171, 41))
+        self.outliers_button.setObjectName(_fromUtf8("outliers_button"))
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -106,7 +110,7 @@ class Ui_Dialog(object):
         self.save_button.clicked.connect(self.save_project)
         self.reload_button.clicked.connect(self.reload_document)
         self.compare_button.clicked.connect(self.compare_all_artists)
-
+        self.outliers_button.clicked.connect(self.get_outliers)
         self.graph_canvas.addWidget(self.canvas)
 
     def retranslateUi(self, Dialog):
@@ -115,6 +119,7 @@ class Ui_Dialog(object):
         self.start_button.setText(_translate("Dialog", "Track \'em !", None))
         self.save_button.setText(_translate("Dialog", "Save project", None))
         self.compare_button.setText(_translate("Dialog", "Compare all artists!", None))
+        self.outliers_button.setText(_translate("Dialog", "Get song outliers", None))
         self.query_input.setText(_translate("Dialog", "coldplay", None))
         self.label.setText(_translate("Dialog", "Artist name", None))
         self.plot_label.setText(_translate("Dialog", "Song popularity", None))
@@ -301,6 +306,10 @@ class Ui_Dialog(object):
         popular_dict[main_artist['name']] = main_artist['popularity']
 
         self.plot(None, None, popular_dict=popular_dict, count=count)
+
+    def get_outliers(self):
+        print ('calculating outliers')
+        pass
 
 
     def setupDB(self):
