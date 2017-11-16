@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import operator
 
-from bson.json_util import dumps
+import json
 
 
 try:
@@ -40,6 +40,13 @@ def autolabel(ax, rects, names):
                 '%d' % int(height),
                 ha='center', va='bottom')
         ax.text(rect.get_x() + rect.get_width()/2., .2*height, names[i], rotation='vertical',ha='center', va='bottom', fontsize=9)
+def print_dict(d):
+    new = {}
+    for k, v in list(d.items()):
+        if isinstance(v, dict):
+            v = print_dict(v)
+        new[k.replace('.', '-')] = v
+    return new
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -154,22 +161,19 @@ class Ui_Dialog(object):
         pprint.pprint(artist2_dict)
 
 
-        global main_name
-        global enemy_name
-        main_name = main_artist['name']
-        enemy_name = enemy['name']
+        self.main_name = main_artist['name']
+        self.enemy_name = enemy['name']
 
         self.plot(artist1_dict, artist2_dict)
 
+        self.artist1_dict = artist1_dict
+        self.artist2_dict = artist2_dict
 
 
 
 
 
     def plot(self, artist1_dict, artist2_dict):
-        global main_name
-        global enemy_name
-
         bar_number = 10
         ind = np.arange(bar_number)  # the x locations for the groups
         width = 0.30       # the width of the bars
@@ -179,6 +183,8 @@ class Ui_Dialog(object):
 
         sorted_dict1 = sorted(artist1_dict.items(), key=operator.itemgetter(1), reverse=True)
         sorted_dict2 = sorted(artist2_dict.items(), key=operator.itemgetter(1), reverse=True)
+
+
 
         values1 = [pair[1] for pair in sorted_dict1]
         values2 = [pair[1] for pair in sorted_dict2]
@@ -197,7 +203,7 @@ class Ui_Dialog(object):
         self.ax.set_xlabel('Top songs from artists')
 
         #Legend with both artist names
-        self.ax.legend((rects1[0], rects2[0]), (main_name, enemy_name))
+        self.ax.legend((rects1[0], rects2[0]), (self.main_name, self.enemy_name))
 
 
         autolabel(self.ax, rects1, names1)
@@ -209,10 +215,12 @@ class Ui_Dialog(object):
         self.query_input.setText('')
         print('saving project with name {}'.format(artist_name))
 
+        new1 = print_dict(self.artist1_dict)
+        new2 = print_dict(self.artist2_dict)
 
-
-        #artist_document = {'name': 'coldplay'}
-        #inserted_id = self.collection.insert_one(artist_document).inserted_id
+        artist_document = {'name': artist_name, 'dict1': new1, 'dict2': new2, 'main': self.main_name, 'enemy': self.enemy_name}
+        inserted_id = self.collection.insert_one(artist_document).inserted_id
+        print ('sucessfully saved!')
         #self.artists_ids.append(str(inserted_id))
         #print (str(inserted_id))
 
@@ -220,6 +228,14 @@ class Ui_Dialog(object):
         artist_name = self.reload_input.text()
         self.reload_input.setText('')
         print('reloading name {}'.format(artist_name))
+
+        record = self.collection.find_one({'name':artist_name})
+        self.main_name = record['main']
+        self.enemy_name = record['enemy']
+        print (record)
+
+        self.plot(record['dict1'], record['dict2'])
+        print ('sucessfully reloaded!')
         #Find by name
 
 
