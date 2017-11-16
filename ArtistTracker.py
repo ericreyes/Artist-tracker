@@ -12,6 +12,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import numpy as np
 import matplotlib.pyplot as plt
 import operator
+import math
 
 import json
 
@@ -120,8 +121,8 @@ class Ui_Dialog(object):
         self.save_button.setText(_translate("Dialog", "Save project", None))
         self.compare_button.setText(_translate("Dialog", "Compare all artists!", None))
         self.outliers_button.setText(_translate("Dialog", "Get song outliers", None))
-        self.query_input.setText(_translate("Dialog", "coldplay", None))
-        self.label.setText(_translate("Dialog", "Artist name", None))
+        self.query_input.setText(_translate("Dialog", "", None))
+        self.label.setText(_translate("Dialog", "Search", None))
         self.plot_label.setText(_translate("Dialog", "Song popularity", None))
         self.reload_button.setText(_translate("Dialog", "Reload project", None))
         self.reload_input.setPlaceholderText(_translate("Dialog", "Project name", None))
@@ -309,7 +310,60 @@ class Ui_Dialog(object):
 
     def get_outliers(self):
         print ('calculating outliers')
-        pass
+        self.artist1_dict = {}
+        self.artist2_dict = {}
+        song_name = self.query_input.text()
+        results = self.spotify.search(q='track:'+ song_name, type='track', limit=50)
+
+
+        all_songs = results['tracks']['items']
+
+
+        if all_songs:
+            pprint.pprint(all_songs[0])
+            print('-----------------------')
+
+        else:
+            print('NO tracks FOUND')
+        media = 0
+
+        values_list = []
+        for i, song in enumerate(all_songs):
+            print (i, song['name'], song['popularity'], song['artists'][0]['name'])
+            values_list.append(float(song['popularity']))
+            media = media + float(song['popularity'])
+
+        mean = np.mean(values_list)
+        variance = (np.std(values_list))
+
+        print ('mean: {}'.format (mean), 'variance: {}'.format (variance))
+
+
+
+        gaussian_array = []
+
+
+        def gaussian(x, mu, sig):
+            return np.exp(-np.power(x - mu, 2.) / (2 * np.power(sig, 2.)))
+
+        for i, song in enumerate(all_songs):
+            x = float(song['popularity'])
+
+            gaus_result = gaussian(x, mean, variance)
+            gaussian_array.append(gaus_result)
+
+
+        print('gaussian_array', gaussian_array)
+        #aussian_array [2.5638928715899847e-59, 1.1746182954073849e-12
+
+
+        # Gives back the top 10 songs
+
+        #response = self.spotify.artist_top_tracks(main_artist['id'])
+        #pprint.pprint(response)
+        #for i, track in enumerate(response['tracks']):
+        #    self.artist1_dict[track['name']] = track['popularity']
+        #pprint.pprint(self.artist1_dict)
 
 
     def setupDB(self):
