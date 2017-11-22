@@ -3,10 +3,12 @@ A tool to analyze artists and songs popularity using Spotify's web API and Pymon
 
 
 ### Steps to install
-### 1 - Clone this repositorie locally.
+### 1 - Clone this repository locally.
   Clone or download the project as a local copy.
   
 ### 2 - Install Anaconda
+Why do we need Anaconda? Well, pyqt4 is a pain to install, so to make things easier, I'm making sure you have my same setup with conda in the middle so we are on the safe spot ;)
+
 Choose regular installation according to your OS
 https://conda.io/docs/user-guide/install/index.html
 
@@ -14,7 +16,7 @@ https://conda.io/docs/user-guide/install/index.html
 This step is necessary so there are not broken dependencies or any missing packages. Mostly broken thinks with pyqt4 :)
 
 Run this command:
-`conda env create -f environment.yml`
+`conda py35_qt4 create -f environment.yml`
 
 ### 4 Activate your environment
 
